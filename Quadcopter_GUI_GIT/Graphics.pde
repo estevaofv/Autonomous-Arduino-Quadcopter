@@ -54,6 +54,33 @@ void drawGraphics() {
     text(roll_lock, 280, 390);
     text(yaw_lock, 280, 400);
     text(motor_speed, 290, 410);
+    /* Optical Flow visual */
+    fill(120);
+    rect(700, 100, 300, 300);
+    stroke(255);
+    strokeWeight(2);
+    line(700, 250, 1000, 250);
+    line(850, 100, 850, 400);
+    if(abs(xPos) < 100 && abs(yPos) < 100){
+      fill(255,0,0);
+      ellipse(850 + (xPos * 1.5), 250 + (yPos * 1.5), 10, 10);
+    }
+    if((abs(xPos) >= 100 && abs(xPos) < 300) || (abs(yPos) >= 100 && abs(yPos) < 300)){
+      strokeWeight(1);
+      stroke(255,255,255,127);
+      line(750, 100, 750, 400);
+      line(800, 100, 800, 400);
+      line(900, 100, 900, 400);
+      line(950, 100, 950, 400);
+      line(700, 150, 1000, 150);
+      line(700, 200, 1000, 200);
+      line(700, 300, 1000, 300);
+      line(700, 350, 1000, 350);
+      stroke(255,255,255,255);
+      fill(255,0,0);
+      ellipse(850 + (xPos * 0.5), 250 + (yPos * 0.5), 10, 10);
+    }
+    strokeWeight(0);
     if (mode != 1) {
       fill(#FF0303);
       textSize(18);

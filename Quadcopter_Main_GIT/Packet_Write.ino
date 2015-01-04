@@ -161,6 +161,25 @@ void writePacket() {
   ITEM[82] = myFloatPtr[2];
   ITEM[83] = myFloatPtr[3];
   
+  //Optical Flow
+  temp = float(xPos);
+  myFloatPtr = (byte*) & temp;
+
+  ITEM[84] = myFloatPtr[0];
+  ITEM[85] = myFloatPtr[1];
+  ITEM[86] = myFloatPtr[2];
+  ITEM[87] = myFloatPtr[3];
+  
+  temp = float(yPos);
+  myFloatPtr = (byte*) & temp;
+
+  ITEM[88] = myFloatPtr[0];
+  ITEM[89] = myFloatPtr[1];
+  ITEM[90] = myFloatPtr[2];
+  ITEM[91] = myFloatPtr[3];
+  
+  ITEM[92] = SQUAL;
+  
   ITEM[96] = packetLoss;
 
   //check sum------------------------

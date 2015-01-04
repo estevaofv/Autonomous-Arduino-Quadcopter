@@ -35,6 +35,7 @@ void serialHandShake() {
       reconnecting = false;
     }
     noRead = 0;
+    logData();
   }
 }
 

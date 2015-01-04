@@ -105,6 +105,11 @@ float AHO = 0;
 /* Inertial Sonar Filter */
 float Zaccel = 0;
 float Zsonar = 0;
+
+/*Optical Flow*/
+float xPos = 0;
+float yPos = 0;
+byte SQUAL;
 //------------------------
 short pitch_lock = 0;
 short roll_lock = 0;
@@ -125,6 +130,8 @@ float p_val = 0;
 float i_val = 0;
 float d_val = 0;
 byte tuningParam = 0;
+
+long lastMillis = 0;
 
 int kill = 0;
 boolean start = false;
@@ -227,7 +234,6 @@ void draw() {
   }
   serialHandShake();  
   connectionCheck();
-  logData(Zaccel, Zsonar, relAlt, PAO);
 }
 
 

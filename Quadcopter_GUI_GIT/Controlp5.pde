@@ -248,8 +248,8 @@ public void controlEvent(ControlEvent Event) {
     else{
       logMode = 1;
       println("File has been created, and data logging has begun!");
-      dataLog = createWriter("data_sets/PDL-" + hour() + "-" + minute() + "-" + second() + "--" + day() + "-" + month() + ".csv");
-      dataLog.println("DATA1, DATA2, DATA3, DATA4, TIME, Created by Kevin Sheridan's Quadcopter GUI"); 
+      dataLog = createWriter("data_sets/FVMap-" + hour() + "-" + minute() + ".csv");
+      dataLog.println("Complete data set for Project: Unknown refer to GUI for structure"); 
     }
   }
   

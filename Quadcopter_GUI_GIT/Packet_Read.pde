@@ -31,7 +31,7 @@ void readPacket() {
   switch(data[0]) {
 
   case 'a':
-    if(checkSum == remainder){
+    if (checkSum == remainder) {
       pitch = get4ByteFloat(data, 1);
       roll = get4ByteFloat(data, 5);
       yaw = get4ByteFloat(data, 9);
@@ -40,46 +40,42 @@ void readPacket() {
       m3 = get4ByteFloat(data, 21);
       m4 = get4ByteFloat(data, 25);
       //alt = get4ByteFloat(data, 29);  //37
-      
+
       relAlt = 0;
       relAlt = ((int)data[33] << 8) | ((int)data[34] & 0xFF);
-      
+
       //dist 5 goes here
-      
-      dist_1 = 0;        //IR DISTANCE SENSORS
-      dist_1 |= data[37];
-      dist_1 = dist_1 << 8;
-      dist_1 |= data[38];
-      
-      dist_2 = 0;     //IR DISTANCE SENSORS
-      dist_2 |= data[39];
-      dist_2 = dist_2 << 8;
-      dist_2 |= data[40];
-      
-      dist_3 = 0;      //IR DISTANCE SENSORS
-      dist_3 |= data[41];
-      dist_3 = dist_3 << 8;
-      dist_3 |= data[42];
-      
+
+      dist_1 = 0;       //IR DISTANCE SENSORS
+      dist_1 = ((int)data[37] << 8) | ((int)data[38] & 0xFF);
+      dist_1 &= 0xFFFF;
+
+      dist_2 = 0;       //IR DISTANCE SENSORS
+      dist_2 = ((int)data[39] << 8) | ((int)data[40] & 0xFF);
+      dist_2 &= 0xFFFF;
+
+      dist_3 = 0;       //IR DISTANCE SENSORS
+      dist_3 = ((int)data[41] << 8) | ((int)data[42] & 0xFF);
+      dist_3 &= 0xFFFF;
+
       dist_4 = 0;       //IR DISTANCE SENSORS
-      dist_4 |= data[43];
-      dist_4 = dist_4 << 8;
-      dist_4 |= data[44];
+      dist_4 = ((int)data[43] << 8) | ((int)data[44] & 0xFF);
+      dist_4 &= 0xFFFF;
       
       cycleTime = 0;
       cycleTime = ((int)data[45] << 8) | ((int)data[46] & 0xFF);      //TIME IT TAKES FOR CODE TO LOOP IN MICROSECONDS
       cycleTime &= 0xFFFF;
       //-----------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! take out
-      
+
       gyro_x = 0;
       gyro_x = (short)(data[47] << 8 | data[48]); // GYRO X
-      
+
       gyro_y = 0;
       gyro_y = (short)(data[49] << 8 | data[50]);   //GYRO Y
-      
+
       gyro_z = 0;
       gyro_z = (short)(data[51] << 8 | data[52]);   //GYRO Z
-      
+
       //PID OUTPUTS
       PAO = get4ByteFloat(data, 53);
       RAO = get4ByteFloat(data, 57);
@@ -87,22 +83,26 @@ void readPacket() {
       RRO = get4ByteFloat(data, 65);
       YRO = get4ByteFloat(data, 69);
       AHO = get4ByteFloat(data, 73);
-      
+
       /* Inertial Sonar Filter */
       Zaccel = get4ByteFloat(data, 77); //ACCELERATION MEASURED FROM ACCELEROMETER
       Zsonar = get4ByteFloat(data, 81); //ACCELERATION MEASURED FROM SONAR
-            
-      if(data[97] == 100){
+
+      //OPTICAL FLOW
+      xPos = get4ByteFloat(data, 85);
+      yPos = get4ByteFloat(data, 89);
+     
+      SQUAL = data[93]; 
+
+      if (data[97] == 100) {
         sendError = true;
         sendPacketLoss++;
-      }
-      else if(data[97] == 0){
+      } else if (data[97] == 0) {
         sendError = false;
       }
-      
+
       readError = false;
-    }
-    else if(checkSum != remainder){
+    } else if (checkSum != remainder) {
       readError = true;
       readPacketLoss++;
     }

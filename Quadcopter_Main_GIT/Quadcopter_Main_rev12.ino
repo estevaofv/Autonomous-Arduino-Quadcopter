@@ -1,6 +1,6 @@
-
 #include <Wire.h>
 #include <Servo.h>
+#include <SPI.h>
 #include <PID_v1.h>
 
 
@@ -70,6 +70,28 @@ float Alt_d = 0.000;
 double altHoldSP, altHoldInput, altHoldOutput;
 PID altHoldPID(&altHoldInput, &altHoldOutput, &altHoldSP, Alt_p, Alt_i, Alt_d, DIRECT);
 
+//position hold--------------------------------------------
+#define MOTION_BURST 0x50
+#define DELTAX 0x03
+#define SS 10
+#define MOSI 11
+#define MISO 12
+#define SCK 13
+
+int8_t Raw_dX = 0;
+int8_t Raw_dY = 0;
+float dX = 0;
+float dY = 0;
+float xPos;
+float yPos;
+float deltaPitch = 0;
+float deltaRoll = 0;
+float lastPitch = 0;
+float lastRoll = 0;
+byte SQUAL = 0;
+byte OFconfig;
+int OF_FOV = 130; //play with
+int OF_Scalar = 5; //these
 //END OF CONTROL METHODS--------------------_______________________________-----------------------------------
 //-----------------------------
 int const min_speed = 1160;
@@ -192,12 +214,15 @@ short deltaMicros = 0;
 
 boolean start = false;
 int mode = 1;
-int kill = 0; // "oh shit!" variable
+int kill = 0; // "uh oh!" variable
 
 void setup() {
   Wire.begin();
   //Serial.begin(9600);// delete if not debugging or programming!
   Serial1.begin(57600);
+  //Optical flow init
+  SPI.begin();
+  OFInit();
   //IMU intit
   ADLX_writeTo(Accel_data_format, 0x01);
   ADLX_writeTo(Accel_power_control, 0x08);
@@ -251,6 +276,9 @@ void loop() {
       //READ SONAR DATA
       readSonar();
       InertialSonarFilter();
+      //READ OPTICAL FLOW DATA
+      OFReadMotion();
+      OFCalculatePosition();
       //READ DISTANCE SENSORS
       IR_read();
       //FILTER IMU DATA
@@ -295,6 +323,8 @@ void loop() {
       readAccel();
       readSonar();
       InertialSonarFilter();
+      OFReadMotion();
+      OFCalculatePosition();
       IR_read();
       ImuFilter(.997);
     }
@@ -306,10 +336,12 @@ void loop() {
       readAccel();
       readSonar();
       InertialSonarFilter();
+      OFReadMotion();
+      OFCalculatePosition();
       IR_read();
       ImuFilter(.997);
     }
-    
+
     // MODE 4
     if(mode == 4){ // MODE DESIGNED FOR TUNING VAROIUS PID SETTINGS
       readGyro();
@@ -317,6 +349,8 @@ void loop() {
       readAccel();
       readSonar();
       InertialSonarFilter();
+      OFReadMotion();
+      OFCalculatePosition();
       IR_read();
       ImuFilter(.997);
       if(connection == true){  //NORMAL MOTOR OPTION IF MOTORS ARE CONNECTED
@@ -368,6 +402,8 @@ void loop() {
     readAccel();
     readSonar();
     InertialSonarFilter();
+    OFReadMotion();
+    OFCalculatePosition();
     IR_read();
     ImuFilter(.997);
     serialHandShake();
@@ -378,6 +414,7 @@ void loop() {
   lastMicros = micros();  
   //------------------------  
 }
+
 
 
 

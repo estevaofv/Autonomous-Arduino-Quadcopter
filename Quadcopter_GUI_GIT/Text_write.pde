@@ -79,6 +79,12 @@ void textWrite() {
   text(Zaccel, 1200, 580);
   text("Z Sonar:", 1155, 590);
   text(Zsonar, 1200, 590);
+  text("X Pos:", 1155, 600);
+  text(xPos, 1200, 600);
+  text("Y Pos:", 1155, 610);
+  text(yPos, 1200, 610);
+  text("S Qual:", 1155, 620);
+  text(SQUAL, 1200, 620);
   textAlign(RIGHT);
   textSize(12);
   text("Return To Home", 1260, 90);
