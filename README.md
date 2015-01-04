@@ -1,4 +1,4 @@
-Autonomous-Arduino-Quadcopter
+Autonomous-Arduino-Quadcopter - Kevin Sheridan
 =============================
 
 This is my code for my autonomous Arduino powered quadcopter
