@@ -14,8 +14,11 @@ void serverPoll() {
 
 void disconnectEvent(Client theClient){
   connected = false;
-  println(theClient.ip() + " disconnected");
+  println(theClient.ip() + " disconnect message: " + (char)theClient.read() );
 }
 
+void serverEvent(Server theServer, Client theClient){
+  println(theClient.ip() + " connected");
+}
 
 
