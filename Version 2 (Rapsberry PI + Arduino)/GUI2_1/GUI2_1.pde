@@ -18,6 +18,7 @@ Server gs_server;
 int port = 10002;
 Client currentClient;
 boolean packetReceived = false;
+int comCounter = 0;
 //GUI VARIABLES----------------------------------------------------
 //gamepad
 
@@ -36,6 +37,7 @@ int arm = 0;
 boolean connected = false;
 
 float tp,ti,td;
+float p, i, d;
 
 short pitch_lock, roll_lock, yaw_lock;
 float pitch,roll,yaw;
