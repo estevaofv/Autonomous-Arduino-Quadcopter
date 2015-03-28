@@ -108,8 +108,7 @@ include_directories(
 add_executable(wifi_client src/wifi_client.cpp)
 target_link_libraries(wifi_client ${catkin_LIBRARIES})
 
-add_executable(serial_node src/serial_node.cpp)
-target_link_libraries(serial_node ${catkin_LIBRARIES})
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(quadcopter_node quadcopter_generate_messages_cpp)

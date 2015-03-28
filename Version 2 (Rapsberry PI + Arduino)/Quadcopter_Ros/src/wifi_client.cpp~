@@ -246,7 +246,7 @@ int main(int argc , char *argv[])
 		wifi_pub.publish(cmd_string);
 		
 		ros::spinOnce(); 
-		loop_rate.sleep(); // maintains constant loop speed while feering up cpu time
+		loop_rate.sleep(); // maintains constant loop speed while freeing up cpu time
 	}
 
     //done
