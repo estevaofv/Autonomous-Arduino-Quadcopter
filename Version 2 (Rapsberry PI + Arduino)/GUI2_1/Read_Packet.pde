@@ -7,9 +7,12 @@ void readPacket() {
     case 100:
       byte[] dataIn = new byte[100];
       dataIn = currentClient.readBytes(); // load bytes
-
-        println(byteCount + "gotcha" + get4ByteFloat(dataIn, 0) + get4ByteFloat(dataIn, 4));
-
+      //-=-=-=-=-=-=-=
+      pitch = get4ByteFloat(dataIn, 0);
+      roll = get4ByteFloat(dataIn, 4);
+      yaw = get4ByteFloat(dataIn, 8);
+      
+      //=-=-=-=-=-=-=-=
       currentClient.clear(); // clear receive buffer
       packetReceived = true; // ready to send data
       break;

@@ -6,7 +6,9 @@ void serverPoll() {
     readPacket();
     // write pertinent data to the current client
     if(packetReceived == true){
-    currentClient.write(writePacket()); 
+    //currentClient.write(writePacket());
+    currentClient.write("qwertyuiopasdfghjklzxcvb");
+     
     packetReceived = false;
     }
   }
