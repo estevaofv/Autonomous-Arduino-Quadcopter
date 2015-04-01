@@ -7,6 +7,7 @@
 #include<netdb.h> //hostent
 
 #include "ros/ros.h"
+#include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/String.h"
 
 #include <sstream>
@@ -144,60 +145,50 @@ string tcp_client::receive(int size=512)
 
 //--------------initialize variables-------------------------
 bool connectionVerified = false;
-// send
-float pitch = 1.00;
-float roll = 1.00;
-float yaw = 1.00;
-float odomX = 2.30;
-float odomY = -2.30;
-short filtered_sonar = 17;
-float true_alt = 16.9;
-float slamX = 14.32;
-float slamY = 17.93;
-float slamT = 1.3;
-// receive
+const int numSerialFloats = 6;
+float serialFloats[numSerialFloats];
+unsigned char serialRawChars[numSerialFloats * 4];
 //-----------------------------------------------------------
+
+void serialInCallback(const std_msgs::Float32MultiArray::ConstPtr& array){
+	int i = 0;
+	for(std::vector<float>::const_iterator it = array->data.begin(); it != array->data.end(); ++it){
+		serialFloats[i] = *it;
+		i++;
+	}
+	//used for converting from floats to chars
+	char* convPointer;
+	convPointer = (char*) & serialFloats[0];
+	serialRawChars[0] = convPointer[0];
+	serialRawChars[1] = convPointer[1];
+	serialRawChars[2] = convPointer[2];
+	serialRawChars[3] = convPointer[3];
+}
 
 string sendPacket(char mode){
 	//intitialize variables
 	string dataString; // initialize the string	
-	char* myFloatPtr; // pointer for float to char conversion
 	// main logic
 	if(mode == 'a'){ // base variable mode
 		// initialization variables
-		char data[100]; // size of transmit buffer
+		unsigned char data[100]; // size of transmit buffer
 		//---------------------------
 		//Fill the buffer with gibberish first
 		for(int i = 0; i < 100; i++){
-		data[i] = 'x';
+			data[i] = 'x';
 		}
 		//---------------------------
-		float testF = 10.03;
-		float testG = 10.04;
-	
-		myFloatPtr = (char*) & testF; // float to char converter
-	
-		data[0] = myFloatPtr[0];
-		data[1] = myFloatPtr[1];
-		data[2] = myFloatPtr[2];
-		data[3] = myFloatPtr[3];
-	
-		myFloatPtr = (char*) & testG; // float to char converter
-	
-		data[4] = myFloatPtr[0];
-		data[5] = myFloatPtr[1];
-		data[6] = myFloatPtr[2];
-		data[7] = myFloatPtr[3];
-	
-		data[8] = 'T';
+		for (int i = 0; i < (numSerialFloats * 4); i++){
+			data[i] = serialRawChars[i];
+		}
 		//--------------------------------
 		for(int i = 0; i < 100; i++){ //convert my char array to a string
 	
-		dataString += data[i];
+			dataString += data[i];
 	
 		}
 	}
-	//-----------send out data 
+	//-----------send out data
 	
 	return(dataString);
 }
@@ -212,7 +203,8 @@ int main(int argc , char *argv[])
   	
   	ros::NodeHandle n; // neccesary for ros
   	
-  	ros::Publisher wifi_pub = n.advertise<std_msgs::String>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
+  	//ros::Publisher wifi_pub = n.advertise<std_msgs::String>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
+  	ros::Subscriber serial_sub = n.subscribe("serial_in", 1000, serialInCallback);
   	
   	ros::Rate loop_rate(10); // used to keep polling at constant rate
   	//-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -228,8 +220,7 @@ int main(int argc , char *argv[])
 		
 	while(ros::ok()){ //checks health of ros node
 		//initialize variables
-    	std_msgs::String cmd_string; // wifi recieve string message for ros
-    	std::stringstream input_ss;
+    	
     	
     	string recvVal;
   
@@ -237,13 +228,7 @@ int main(int argc , char *argv[])
     	c.send_data(sendPacket('a'));
      	//received 100 bytes
     	recvVal = c.receive(100);
-    	// put recvval into string stream
-    	input_ss << recvVal;
-    	//load stringstream into cmd message
-    	cmd_string.data = input_ss.str();
-		
-		//Publishes to topic
-		wifi_pub.publish(cmd_string);
+    	
 		
 		ros::spinOnce(); 
 		loop_rate.sleep(); // maintains constant loop speed while freeing up cpu time

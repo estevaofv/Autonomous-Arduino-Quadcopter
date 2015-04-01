@@ -145,18 +145,15 @@ string tcp_client::receive(int size=512)
 //--------------initialize variables-------------------------
 bool connectionVerified = false;
 // send
-float pitch = 1.00;
-float roll = 1.00;
-float yaw = 1.00;
-float odomX = 2.30;
-float odomY = -2.30;
-short filtered_sonar = 17;
-float true_alt = 16.9;
-float slamX = 14.32;
-float slamY = 17.93;
-float slamT = 1.3;
+string serialDataIn;
 // receive
 //-----------------------------------------------------------
+
+void serialInCallback(const std_msgs::String::ConstPtr& msg){
+	serialDataIn = msg->data.c_str(); //add data to the tx string
+	std::cout << serialDataIn.length() << "\n";
+	ROS_INFO("receieved data from serial node");
+}
 
 string sendPacket(char mode){
 	//intitialize variables
@@ -172,24 +169,20 @@ string sendPacket(char mode){
 		data[i] = 'x';
 		}
 		//---------------------------
-		float testF = 10.03;
-		float testG = 10.04;
-	
-		myFloatPtr = (char*) & testF; // float to char converter
-	
-		data[0] = myFloatPtr[0];
-		data[1] = myFloatPtr[1];
-		data[2] = myFloatPtr[2];
-		data[3] = myFloatPtr[3];
-	
-		myFloatPtr = (char*) & testG; // float to char converter
-	
-		data[4] = myFloatPtr[0];
-		data[5] = myFloatPtr[1];
-		data[6] = myFloatPtr[2];
-		data[7] = myFloatPtr[3];
-	
-		data[8] = 'T';
+		for(int i = 0; i < serialDataIn.length(); i++){
+			data[i] = serialDataIn[i];
+		}
+		union u_tag{
+				char b[4];
+				float fval;
+			} u;
+			
+			u.b[0] = serialDataIn[21];
+			u.b[1] = serialDataIn[22];
+			u.b[2] = serialDataIn[23];
+			u.b[3] = serialDataIn[24];
+				
+			std::cout << u.fval << "\n";
 		//--------------------------------
 		for(int i = 0; i < 100; i++){ //convert my char array to a string
 	
@@ -197,7 +190,7 @@ string sendPacket(char mode){
 	
 		}
 	}
-	//-----------send out data 
+	//-----------send out data
 	
 	return(dataString);
 }
@@ -213,6 +206,7 @@ int main(int argc , char *argv[])
   	ros::NodeHandle n; // neccesary for ros
   	
   	ros::Publisher wifi_pub = n.advertise<std_msgs::String>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
+  	ros::Subscriber serial_sub = n.subscribe("serial_raw", 1000, serialInCallback);
   	
   	ros::Rate loop_rate(10); // used to keep polling at constant rate
   	//-=-=-=-=-=-=-=-=-=-=-=-=-

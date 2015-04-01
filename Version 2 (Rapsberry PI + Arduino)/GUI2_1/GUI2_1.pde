@@ -41,6 +41,8 @@ float p, i, d;
 
 short pitch_lock, roll_lock, yaw_lock;
 float pitch,roll,yaw;
+float relalt;
+float odomx, odomy;
 
 void setup() {
   size(displayWidth - 50, displayHeight - 50); //start window

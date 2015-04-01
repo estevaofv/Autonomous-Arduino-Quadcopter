@@ -12,9 +12,11 @@ void overlayText() {
   text("Pitch: ", width - 500, height - 200);
   text("Roll: ", width - 500, height - 190);
   text("Yaw: ", width - 500, height - 180);
+  text("Relative Alt: ", width - 370, height - 200);
   textAlign(LEFT);
   text(pitch, width - 500, height - 200);
   text(roll, width - 500, height - 190);
   text(yaw, width - 500, height - 180);
+  text(relalt, width - 370, height - 200);
 }
 

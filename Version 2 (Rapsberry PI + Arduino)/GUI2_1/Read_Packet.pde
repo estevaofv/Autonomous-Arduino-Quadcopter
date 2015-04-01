@@ -8,10 +8,13 @@ void readPacket() {
       byte[] dataIn = new byte[100];
       dataIn = currentClient.readBytes(); // load bytes
       //-=-=-=-=-=-=-=
+      
       pitch = get4ByteFloat(dataIn, 0);
       roll = get4ByteFloat(dataIn, 4);
       yaw = get4ByteFloat(dataIn, 8);
-      
+      odomx = get4ByteFloat(dataIn, 12);
+      odomy = get4ByteFloat(dataIn, 16);
+      relalt = get4ByteFloat(dataIn, 20);
       //=-=-=-=-=-=-=-=
       currentClient.clear(); // clear receive buffer
       packetReceived = true; // ready to send data

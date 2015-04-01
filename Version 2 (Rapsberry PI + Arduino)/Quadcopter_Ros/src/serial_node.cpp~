@@ -18,7 +18,6 @@ int count;
 int uart0_filestream = -1;
 bool bytesReceived = true;
 
-
 void transferSerialData(){
 	//----- CHECK FOR ANY RX BYTES -----
 	if (uart0_filestream != -1)
@@ -44,7 +43,23 @@ void transferSerialData(){
 				temp += rx_buffer[i];
 			}
 			serialDataIn = temp;
+			
 			ROS_INFO("i got: %s", rx_buffer);
+			ROS_INFO("%i", rx_length);
+			
+			union u_tag{
+				char b[4];
+				float fval;
+			} u;
+			
+			u.b[0] = serialDataIn[20];
+			u.b[1] = serialDataIn[21];
+			u.b[2] = serialDataIn[22];
+			u.b[3] = serialDataIn[23];
+			
+			//std::cout << serialDataIn << "\n";
+			std::cout << u.fval << "\n";
+			
 			if(rx_length >= 4){
 			bytesReceived = true;
 			}
@@ -52,7 +67,7 @@ void transferSerialData(){
 	}
     //----- TX BYTES -----
     if(bytesReceived == true){
-	unsigned char tx_buffer[20]; // the 53 bytes to send to the teensy
+	unsigned char tx_buffer[25]; // the 53 bytes to send to the teensy
 	unsigned char *p_tx_buffer;
 	
 	p_tx_buffer = &tx_buffer[0];
@@ -79,6 +94,11 @@ void transferSerialData(){
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 }
 
+void wifiInCallback(const std_msgs::String::ConstPtr& msg){
+	wifiDataIn = msg->data.c_str(); // add data to the tx string 
+	ROS_INFO("received message from wifi client");
+}
+
 int main(int argc, char **argv){
 	// INITIALIZE ROS
 	ros::init(argc, argv, "serial_node");
@@ -86,6 +106,7 @@ int main(int argc, char **argv){
 	ros::Rate loop_rate(10);
 	
 	ros::Publisher serial_raw_pub = n.advertise<std_msgs::String>("serial_raw", 1000);
+	ros::Subscriber wifi_sub = n.subscribe("wifi_cmd", 1000, wifiInCallback);
 	// INITIALIZE THE UART SERIAL PORT
 	uart0_filestream = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY);		
 	
@@ -116,7 +137,7 @@ int main(int argc, char **argv){
 		std_msgs::String serial_raw_msg;
 		std::stringstream ss;
 		ss << serialDataIn;
-		serial_raw_msg.data = ss.str();
+		serial_raw_msg.data = serialDataIn;
 		serial_raw_pub.publish(serial_raw_msg);
 		
 		loop_rate.sleep();	// keep 10 hertz loop rate
