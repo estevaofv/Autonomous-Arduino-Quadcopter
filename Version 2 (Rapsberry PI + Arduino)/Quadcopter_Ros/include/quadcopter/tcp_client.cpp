@@ -2,7 +2,7 @@
  * tcp_client.cpp
  *
  *  Created on: Mar 31, 2015
- *      Author: trexter
+ *      Author: trexter(not completely though)
  */
 #include "tcp_client.h"
 
