@@ -38,8 +38,11 @@ boolean connected = false;
 
 float tp,ti,td;
 float p, i, d;
+byte mode, pid_mode, pid_sync;
+byte[] FB = new byte[4];
 
 short pitch_lock, roll_lock, yaw_lock;
+short throttle;
 float pitch,roll,yaw;
 float relalt;
 float odomx, odomy;
