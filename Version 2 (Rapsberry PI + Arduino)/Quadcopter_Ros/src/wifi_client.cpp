@@ -8,6 +8,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/ByteMultiArray.h"
 #include "std_msgs/String.h"
 
 #include <sstream>
@@ -147,7 +148,6 @@ string tcp_client::receive(int size=512)
 bool connectionVerified = false;
 const int numSerialFloats = 6;
 float serialFloats[numSerialFloats];
-unsigned char serialRawChars[numSerialFloats * 4];
 //-----------------------------------------------------------
 
 void serialInCallback(const std_msgs::Float32MultiArray::ConstPtr& array){
@@ -156,13 +156,6 @@ void serialInCallback(const std_msgs::Float32MultiArray::ConstPtr& array){
 		serialFloats[i] = *it;
 		i++;
 	}
-	//used for converting from floats to chars
-	char* convPointer;
-	convPointer = (char*) & serialFloats[0];
-	serialRawChars[0] = convPointer[0];
-	serialRawChars[1] = convPointer[1];
-	serialRawChars[2] = convPointer[2];
-	serialRawChars[3] = convPointer[3];
 }
 
 string sendPacket(char mode){
@@ -171,20 +164,24 @@ string sendPacket(char mode){
 	// main logic
 	if(mode == 'a'){ // base variable mode
 		// initialization variables
-		unsigned char data[100]; // size of transmit buffer
+		char* floatPtr;
 		//---------------------------
-		//Fill the buffer with gibberish first
-		for(int i = 0; i < 100; i++){
-			data[i] = 'x';
-		}
-		//---------------------------
-		for (int i = 0; i < (numSerialFloats * 4); i++){
-			data[i] = serialRawChars[i];
+		for(int i = 0; i < numSerialFloats; i++){ // converts float array to chars and adds them to the data string
+			floatPtr = (char*) & serialFloats[i];
+			for(int j = 0; j < 4; j++){
+				char tempChar = floatPtr[j];
+				if(tempChar != NULL){
+					dataString.append(1, tempChar);
+				}
+				else{
+					dataString.append(1, 'c');
+				}
+			}
 		}
 		//--------------------------------
-		for(int i = 0; i < 100; i++){ //convert my char array to a string
+		for(int i = 0; i < (100 - (numSerialFloats * 4)); i++){ //convert my char array to a string
 	
-			dataString += data[i];
+			dataString += 'x';
 	
 		}
 	}
@@ -203,7 +200,7 @@ int main(int argc , char *argv[])
   	
   	ros::NodeHandle n; // neccesary for ros
   	
-  	//ros::Publisher wifi_pub = n.advertise<std_msgs::String>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
+  	ros::Publisher wifi_pub = n.advertise<std_msgs::ByteMultiArray>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
   	ros::Subscriber serial_sub = n.subscribe("serial_in", 1000, serialInCallback);
   	
   	ros::Rate loop_rate(10); // used to keep polling at constant rate
@@ -226,9 +223,17 @@ int main(int argc , char *argv[])
   
     	//send some data
     	c.send_data(sendPacket('a'));
+    	
      	//received 100 bytes
     	recvVal = c.receive(100);
-    	
+    	std::cout << recvVal << "\n";
+    	//publish recvVal;
+    	std_msgs::ByteMultiArray wifiIn_array;
+    	wifiIn_array.data.clear();
+    	for(int i = 0; i < recvVal.length(); i++){
+			wifiIn_array.data.push_back((signed char)recvVal[i]);
+		}
+		wifi_pub.publish(wifiIn_array);
 		
 		ros::spinOnce(); 
 		loop_rate.sleep(); // maintains constant loop speed while freeing up cpu time

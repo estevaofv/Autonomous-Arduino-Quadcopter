@@ -16,6 +16,7 @@ void readPacket() {
       odomy = get4ByteFloat(dataIn, 16);
       relalt = get4ByteFloat(dataIn, 20);
       //=-=-=-=-=-=-=-=
+      
       currentClient.clear(); // clear receive buffer
       packetReceived = true; // ready to send data
       break;

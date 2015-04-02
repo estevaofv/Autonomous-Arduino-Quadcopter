@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float32MultiArray.h>
+#include "std_msgs/ByteMultiArray.h"
 #include <sstream>
 #include <string>
 #include <string.h>
@@ -19,6 +20,16 @@ float serialInFloats[6];
 //=-=-=-=-=-=-=
 int uart0_filestream = -1;
 bool bytesReceived = true;
+const int wifiInCharNum = 25;
+char wifiInChar[wifiInCharNum];
+
+void wifiInCallback(const std_msgs::ByteMultiArray::ConstPtr& array){
+	int i = 0;
+	for(std::vector<signed char>::const_iterator it = array->data.begin(); it != array->data.end(); ++it){
+		wifiInChar[i] = (char)*it;
+		i++;
+	}
+}
 
 void transferSerialData(){
 	//----- CHECK FOR ANY RX BYTES -----
@@ -59,8 +70,13 @@ void transferSerialData(){
 	
 		p_tx_buffer = &tx_buffer[0];
 		//load data into the buffer for transmission
-		for(int i = 0; i < 24; i++){
-			*p_tx_buffer++ = 'b';
+		for(int i = 0; i < wifiInCharNum; i++){
+			if(wifiInChar[i] != NULL){
+				*p_tx_buffer++ = wifiInChar[i];
+			}
+			else{
+				*p_tx_buffer++ = 'p';
+			}
 		}
 		//transmit
 		if (uart0_filestream != -1)
@@ -82,6 +98,7 @@ void transferSerialData(){
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 }
 
+
 float char2Float(unsigned char data[], int offset){
 	union {
 		unsigned char c[4];
@@ -102,7 +119,7 @@ int main(int argc, char **argv){
 	ros::Rate loop_rate(10);
 	
 	ros::Publisher serial_pub = n.advertise<std_msgs::Float32MultiArray>("serial_in", 1000);
-	//ros::Subscriber wifi_sub = n.subscribe("wifi_cmd", 1000, wifiInCallback);
+	ros::Subscriber wifi_sub = n.subscribe("wifi_cmd", 1000, wifiInCallback);
 	
 	// INITIALIZE THE UART SERIAL PORT
 	uart0_filestream = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY);		
