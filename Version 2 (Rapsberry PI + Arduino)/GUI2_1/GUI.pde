@@ -5,5 +5,7 @@ void drawGUI(){
   
   overlayText();
   
+  odomGraph.updateValues(1, 1);
+  
   cp5.draw();
 }

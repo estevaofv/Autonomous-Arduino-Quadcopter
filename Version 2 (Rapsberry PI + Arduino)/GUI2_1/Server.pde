@@ -5,7 +5,7 @@ void serverPoll() {
     readPacket();
     // write pertinent data to the current client
     if(packetReceived == true){
-    currentClient.write(writePacket()); 
+    writePacket(); 
     packetReceived = false;
     }
   }

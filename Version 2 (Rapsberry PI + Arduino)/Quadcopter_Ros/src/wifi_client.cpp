@@ -6,14 +6,17 @@
 #include<arpa/inet.h> //inet_addr
 #include<netdb.h> //hostent
 
+#include <vector>
 #include "ros/ros.h"
 #include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/ByteMultiArray.h"
 #include "std_msgs/String.h"
+#include <boost/algorithm/string.hpp>
 
 #include <sstream>
  
 using namespace std;
+using namespace boost;
  
 /**
     TCP Client class
@@ -146,16 +149,11 @@ string tcp_client::receive(int size=512)
 
 //--------------initialize variables-------------------------
 bool connectionVerified = false;
-const int numSerialFloats = 6;
-float serialFloats[numSerialFloats];
+std::string serialInString = "-";
 //-----------------------------------------------------------
 
-void serialInCallback(const std_msgs::Float32MultiArray::ConstPtr& array){
-	int i = 0;
-	for(std::vector<float>::const_iterator it = array->data.begin(); it != array->data.end(); ++it){
-		serialFloats[i] = *it;
-		i++;
-	}
+void serialInCallback(const std_msgs::String::ConstPtr& msg){
+	serialInString = msg->data;
 }
 
 string sendPacket(char mode){
@@ -163,33 +161,15 @@ string sendPacket(char mode){
 	string dataString; // initialize the string	
 	// main logic
 	if(mode == 'a'){ // base variable mode
-		// initialization variables
-		char* floatPtr;
-		//---------------------------
-		for(int i = 0; i < numSerialFloats; i++){ // converts float array to chars and adds them to the data string
-			floatPtr = (char*) & serialFloats[i];
-			for(int j = 0; j < 4; j++){
-				char tempChar = floatPtr[j];
-				if(tempChar != NULL){
-					dataString.append(1, tempChar);
-				}
-				else{
-					dataString.append(1, 'c');
-				}
-			}
-		}
-		//--------------------------------
-		for(int i = 0; i < (100 - (numSerialFloats * 4)); i++){ //convert my char array to a string
-	
-			dataString += 'x';
-	
-		}
+		dataString += 'a';
+		dataString += '\n';
+		dataString += serialInString;
 	}
 	//-----------send out data
 	
 	return(dataString);
 }
- 
+
 int main(int argc , char *argv[])
 {
     tcp_client c;
@@ -200,14 +180,14 @@ int main(int argc , char *argv[])
   	
   	ros::NodeHandle n; // neccesary for ros
   	
-  	ros::Publisher wifi_pub = n.advertise<std_msgs::ByteMultiArray>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
+  	ros::Publisher wifi_pub = n.advertise<std_msgs::String>("wifi_cmd", 1000); //creates a publisher for the recieved information (currently of type string)
   	ros::Subscriber serial_sub = n.subscribe("serial_in", 1000, serialInCallback);
   	
   	ros::Rate loop_rate(10); // used to keep polling at constant rate
   	//-=-=-=-=-=-=-=-=-=-=-=-=-
   	
   	//temporary, finds host ip
-    cout<<"Enter hostname : ";
+    cout<<"Enter hostname : "; 
     cin>>host;
      
     //connect to host
@@ -224,16 +204,14 @@ int main(int argc , char *argv[])
     	//send some data
     	c.send_data(sendPacket('a'));
     	
-     	//received 100 bytes
-    	recvVal = c.receive(100);
-    	std::cout << recvVal << "\n";
-    	//publish recvVal;
-    	std_msgs::ByteMultiArray wifiIn_array;
-    	wifiIn_array.data.clear();
-    	for(int i = 0; i < recvVal.length(); i++){
-			wifiIn_array.data.push_back((signed char)recvVal[i]);
-		}
-		wifi_pub.publish(wifiIn_array);
+     	//received 200 bytes max
+    	recvVal = c.receive(200);
+    	//std::cout << recvVal << "\n";
+    	//publish recvValProc;
+    	
+    	std_msgs::String wifiIn_msg;
+    	wifiIn_msg.data = recvVal;
+		wifi_pub.publish(wifiIn_msg);
 		
 		ros::spinOnce(); 
 		loop_rate.sleep(); // maintains constant loop speed while freeing up cpu time

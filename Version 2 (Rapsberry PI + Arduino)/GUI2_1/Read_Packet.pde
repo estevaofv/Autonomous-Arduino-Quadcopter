@@ -1,35 +1,27 @@
 void readPacket() {
-  int byteCount = currentClient.available();
-  
-  if (currentClient != null) {
-
-    switch(byteCount) {
-    case 100:
-      byte[] dataIn = new byte[100];
-      dataIn = currentClient.readBytes(); // load bytes
-      //-=-=-=-=-=-=-=
-      
-      pitch = get4ByteFloat(dataIn, 0);
-      roll = get4ByteFloat(dataIn, 4);
-      yaw = get4ByteFloat(dataIn, 8);
-      odomx = get4ByteFloat(dataIn, 12);
-      odomy = get4ByteFloat(dataIn, 16);
-      relalt = get4ByteFloat(dataIn, 20);
-      //=-=-=-=-=-=-=-=
-      
-      currentClient.clear(); // clear receive buffer
-      packetReceived = true; // ready to send data
+  byte[] type = currentClient.readBytesUntil(10);
+  if (type != null) {
+    switch((char)type[0]) {
+    case 'a':
+      String message = currentClient.readString();
+      String stringVals[] = split(message, ",");
+      if(message.length() > 30){
+      pitch = Float.parseFloat(stringVals[0]);
+      roll = Float.parseFloat(stringVals[1]);
+      yaw = Float.parseFloat(stringVals[2]);
+      odomx = Float.parseFloat(stringVals[3]);
+      odomy = Float.parseFloat(stringVals[4]);
+      relalt = Float.parseFloat(stringVals[5]);
+      }
+      packetReceived = true;
+      //println(message);
       break;
-
-      //-------------------------------------------------------
 
     default:
-      packetReceived = false;
-      println(byteCount);
-      break;
-
-      //--------------------------------------------------------
+      println("unrecognized type");
+      currentClient.clear();
+      packetReceived = true;
     }
-  } 
+  }
 }
 

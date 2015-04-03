@@ -16,19 +16,15 @@
 float char2Float(unsigned char data[], int offset);
 
 //ROS variables
-float serialInFloats[6];
+std::string serialInString;
+std::string wifiInString = "-----";
 //=-=-=-=-=-=-=
 int uart0_filestream = -1;
 bool bytesReceived = true;
-const int wifiInCharNum = 25;
-char wifiInChar[wifiInCharNum];
 
-void wifiInCallback(const std_msgs::ByteMultiArray::ConstPtr& array){
-	int i = 0;
-	for(std::vector<signed char>::const_iterator it = array->data.begin(); it != array->data.end(); ++it){
-		wifiInChar[i] = (char)*it;
-		i++;
-	}
+
+void wifiInCallback(const std_msgs::String::ConstPtr& msg){
+	wifiInString = msg->data;
 }
 
 void transferSerialData(){
@@ -50,13 +46,12 @@ void transferSerialData(){
 		{
 			//Bytes received
 			rx_buffer[rx_length] = '\0';
+			std::string temp;
+			for(int i = 0; i < rx_length; i++){
+				temp += rx_buffer[i];
+			}
 			
-			serialInFloats[0] = char2Float(rx_buffer, 0);
-			serialInFloats[1] = char2Float(rx_buffer, 4);
-			serialInFloats[2] = char2Float(rx_buffer, 8);
-			serialInFloats[3] = char2Float(rx_buffer, 12);
-			serialInFloats[4] = char2Float(rx_buffer, 16);
-			serialInFloats[5] = char2Float(rx_buffer, 20);
+			serialInString = temp;
 			
 			if(rx_length >= 4){ // check to see if the data is there
 				bytesReceived = true;
@@ -65,28 +60,27 @@ void transferSerialData(){
 	}
     //----- TX BYTES -----
     if(bytesReceived == true){
-		unsigned char tx_buffer[25]; // the 53 bytes to send to the teensy
+		unsigned char tx_buffer[25]; // the bytes to send to the teensy
 		unsigned char *p_tx_buffer;
 	
 		p_tx_buffer = &tx_buffer[0];
 		//load data into the buffer for transmission
-		for(int i = 0; i < wifiInCharNum; i++){
-			if(wifiInChar[i] != NULL){
-				*p_tx_buffer++ = wifiInChar[i];
+		*p_tx_buffer++ = 'a';
+		*p_tx_buffer++ = '\n';
+		for(int i = 0; i < wifiInString.length(); i++){
+			if(wifiInString[i] != NULL){
+				*p_tx_buffer++ = wifiInString[i];
 			}
 			else{
-				*p_tx_buffer++ = 'p';
+				*p_tx_buffer++ = 'x';
 			}
 		}
+		*p_tx_buffer++ = 'z';
+		//std::cout << wifiInString << "\n";
 		//transmit
 		if (uart0_filestream != -1)
 		{
 			int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
-			if (count < 0)
-			{
-				ROS_INFO("UART TX error\n");
-			}
-			count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
 			if (count < 0)
 			{
 				ROS_INFO("UART TX error\n");
@@ -99,26 +93,13 @@ void transferSerialData(){
 }
 
 
-float char2Float(unsigned char data[], int offset){
-	union {
-		unsigned char c[4];
-		float f;
-	} u;
-	u.c[0] = data[offset];
-	u.c[1] = data[offset + 1];
-	u.c[2] = data[offset + 2];
-	u.c[3] = data[offset + 3];
-	
-	return u.f;
-}
-
 int main(int argc, char **argv){
 	// INITIALIZE ROS
 	ros::init(argc, argv, "serial_node");
 	ros::NodeHandle n;
 	ros::Rate loop_rate(10);
 	
-	ros::Publisher serial_pub = n.advertise<std_msgs::Float32MultiArray>("serial_in", 1000);
+	ros::Publisher serial_pub = n.advertise<std_msgs::String>("serial_in", 1000);
 	ros::Subscriber wifi_sub = n.subscribe("wifi_cmd", 1000, wifiInCallback);
 	
 	// INITIALIZE THE UART SERIAL PORT
@@ -145,12 +126,9 @@ int main(int argc, char **argv){
 		
 		transferSerialData();
 		//Publishes data to the topic
-		std_msgs::Float32MultiArray serialOutArray;
-		serialOutArray.data.clear();
-		for (int i = 0; i < 6; i++){
-			serialOutArray.data.push_back(serialInFloats[i]);
-		}
-		serial_pub.publish(serialOutArray);
+		std_msgs::String serialIn_msg;
+		serialIn_msg.data = serialInString;
+		serial_pub.publish(serialIn_msg);
 		
 		ros::spinOnce(); // process callbacks
 		
